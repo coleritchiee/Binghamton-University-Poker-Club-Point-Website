@@ -10,6 +10,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Meeting, Tournament } from '../types'
 import WeeklyMeetingDetailsDialog from './weekly-meeting-details-dialog'
+import AddWeeklyMeetingDialog from './add-weekly-meeting-dialog'
+import { Plus } from 'lucide-react'
 
 type SelectItemDialogProps = {
   isOpen: boolean;
@@ -19,6 +21,7 @@ type SelectItemDialogProps = {
   onSelectItem: (item: Meeting | Tournament) => void;
   onCreateNew: () => void;
   itemType: 'weekly-meetings' | 'tournaments';
+  onRefresh: () => void;
 }
 
 export default function SelectItemDialog({
@@ -28,9 +31,11 @@ export default function SelectItemDialog({
   items,
   onSelectItem,
   onCreateNew,
-  itemType
+  itemType,
+  onRefresh
 }: SelectItemDialogProps) {
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null)
+  const [isAddMeetingDialogOpen, setIsAddMeetingDialogOpen] = useState(false)
 
   const handleItemClick = (item: Meeting | Tournament) => {
     if (itemType === 'weekly-meetings') {
@@ -38,6 +43,15 @@ export default function SelectItemDialog({
     } else {
       onSelectItem(item)
     }
+  }
+
+  const handleAddMeetingSuccess = () => {
+    onRefresh()
+  }
+
+  const handleMeetingDeleted = () => {
+    setSelectedMeeting(null)
+    onRefresh()
   }
 
   return (
@@ -62,9 +76,16 @@ export default function SelectItemDialog({
               </Button>
             ))}
           </ScrollArea>
-          <Button onClick={onCreateNew} className="w-full mt-4">
-            <span className="mr-2">+</span> Create New
-          </Button>
+          {itemType === 'weekly-meetings' && (
+            <Button onClick={() => setIsAddMeetingDialogOpen(true)} className="w-full mt-4">
+              <Plus className="mr-2 h-4 w-4" /> Add Weekly Meeting
+            </Button>
+          )}
+          {itemType === 'tournaments' && (
+            <Button onClick={onCreateNew} className="w-full mt-4">
+              <Plus className="mr-2 h-4 w-4" /> Create New
+            </Button>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -73,8 +94,15 @@ export default function SelectItemDialog({
           meeting={selectedMeeting}
           isOpen={!!selectedMeeting}
           onOpenChange={(open) => !open && setSelectedMeeting(null)}
+          onMeetingDeleted={handleMeetingDeleted}
         />
       )}
+
+      <AddWeeklyMeetingDialog
+        isOpen={isAddMeetingDialogOpen}
+        onOpenChange={setIsAddMeetingDialogOpen}
+        onSuccess={handleAddMeetingSuccess}
+      />
     </>
   )
 }

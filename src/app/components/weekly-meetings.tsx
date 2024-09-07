@@ -20,7 +20,6 @@ export default async function WeeklyMeetings() {
       return <div>No weekly meetings data available.</div>;
     }
 
-    // Sort meetings alphabetically by name
     const sortedMeetings = [...meetings].sort((a, b) => a.name.localeCompare(b.name));
 
     return (

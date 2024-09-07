@@ -22,10 +22,19 @@ export interface LeaderboardEntry {
     rank: number;
     name: string;
     points: number;
+    knockouts: number;
   }
   
   export interface Tournament {
     id: string;
     name: string;
+    type: string;
+    isActive: boolean;
     results: TournamentResult[];
+  }
+
+  export interface Player {
+    id: string;
+    name: string;
+    points: number;
   }

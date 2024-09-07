@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -10,7 +10,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import SelectItemDialog from './select-item-dialog'
-import { getMeetingsData, getTournamentsData } from '../firebase/firebase'
+import SelectTournamentItemDialog from './select-tournament-item-dialog'
+import PlayersListDialog from './players-list-dialog'
+import { getMeetingsData, getTournaments } from '../firebase/firebase'
 import { Meeting, Tournament } from '../types'
 
 type EditDialogProps = {
@@ -19,35 +21,42 @@ type EditDialogProps = {
 }
 
 export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
-  const [selectedOption, setSelectedOption] = useState<'weekly-meetings' | 'tournaments' | null>(null)
-  const [items, setItems] = useState<Meeting[] | Tournament[]>([])
+  const [selectedOption, setSelectedOption] = useState<'weekly-meetings' | 'tournaments' | 'players' | null>(null)
+  const [meetings, setMeetings] = useState<Meeting[]>([])
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleEdit = async (option: 'weekly-meetings' | 'tournaments') => {
-    setSelectedOption(option)
+  const fetchItems = async (option: 'weekly-meetings' | 'tournaments') => {
+    setIsLoading(true)
+    setError(null)
     try {
       if (option === 'weekly-meetings') {
-        const meetings = await getMeetingsData()
-        setItems(meetings)
-      } else {
-        const tournaments = await getTournamentsData()
-        setItems(tournaments)
+        const fetchedMeetings = await getMeetingsData()
+        setMeetings(fetchedMeetings)
+      } else if (option === 'tournaments') {
+        const fetchedTournaments = await getTournaments()
+        setTournaments(fetchedTournaments)
       }
-    } catch (error) {
-      console.error(`Error fetching ${option}:`, error)
-      // You might want to show an error message to the user here
+    } catch (err) {
+      console.error(`Error fetching ${option}:`, err)
+      setError(`Failed to load ${option}. Please try again.`)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleSelectItem = (item: Meeting | Tournament) => {
-    console.log(`Selected ${selectedOption === 'weekly-meetings' ? 'meeting' : 'tournament'}:`, item)
-    // Here you would typically open another dialog to edit the selected item
-    setSelectedOption(null)
+  const handleEdit = async (option: 'weekly-meetings' | 'tournaments' | 'players') => {
+    setSelectedOption(option)
+    if (option === 'weekly-meetings' || option === 'tournaments') {
+      await fetchItems(option)
+    }
   }
 
-  const handleCreateNew = () => {
-    console.log(`Creating new ${selectedOption === 'weekly-meetings' ? 'meeting' : 'tournament'}`)
-    // Here you would typically open another dialog to create a new item
-    setSelectedOption(null)
+  const handleRefresh = async () => {
+    if (selectedOption === 'weekly-meetings' || selectedOption === 'tournaments') {
+      await fetchItems(selectedOption)
+    }
   }
 
   return (
@@ -67,19 +76,44 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
             <Button onClick={() => handleEdit('tournaments')}>
               Edit Tournaments
             </Button>
+            <Button onClick={() => handleEdit('players')}>
+              Players List
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <SelectItemDialog
-        isOpen={selectedOption !== null}
-        onOpenChange={(open) => !open && setSelectedOption(null)}
-        title={`Select a ${selectedOption === 'weekly-meetings' ? 'Meeting' : 'Tournament'}`}
-        items={items}
-        onSelectItem={handleSelectItem}
-        onCreateNew={handleCreateNew}
-        itemType={selectedOption || 'weekly-meetings'}
-      />
+      {selectedOption === 'players' && (
+        <PlayersListDialog
+          isOpen={selectedOption === 'players'}
+          onOpenChange={(open) => !open && setSelectedOption(null)}
+        />
+      )}
+
+      {selectedOption === 'weekly-meetings' && (
+        <SelectItemDialog
+          isOpen={selectedOption === 'weekly-meetings'}
+          onOpenChange={(open) => !open && setSelectedOption(null)}
+          title="Select a Meeting"
+          items={meetings}
+          onSelectItem={(item) => console.log('Selected meeting:', item)}
+          onCreateNew={() => console.log('Creating new meeting')}
+          itemType="weekly-meetings"
+          onRefresh={handleRefresh}
+        />
+      )}
+
+      {selectedOption === 'tournaments' && (
+        <SelectTournamentItemDialog
+          isOpen={selectedOption === 'tournaments'}
+          onOpenChange={(open) => !open && setSelectedOption(null)}
+          tournaments={tournaments}
+          onRefresh={handleRefresh}
+        />
+      )}
+
+      {isLoading && <div>Loading...</div>}
+      {error && <div className="text-destructive">{error}</div>}
     </>
   )
 }

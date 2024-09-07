@@ -1,4 +1,4 @@
-import { getTournamentsData } from '../firebase/firebase';
+import { getTournaments } from '../firebase/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
@@ -13,18 +13,18 @@ import { Tournament, TournamentResult } from '../types';
 
 export default async function Tournaments() {
   try {
-    const tournaments: Tournament[] = await getTournamentsData();
+    const allTournaments: Tournament[] = await getTournaments();
+    const nonActiveTournaments = allTournaments.filter(tournament => !tournament.isActive);
 
-    if (tournaments.length === 0) {
-      return <div>No tournaments data available.</div>;
+    if (nonActiveTournaments.length === 0) {
+      return <div className="text-center p-4">No completed tournaments available.</div>;
     }
 
-    // Sort tournaments alphabetically by name
-    const sortedTournaments = [...tournaments].sort((a, b) => a.name.localeCompare(b.name));
+    const sortedTournaments = [...nonActiveTournaments].sort((a, b) => a.name.localeCompare(b.name));
 
     return (
       <Tabs defaultValue={sortedTournaments[0]?.id}>
-        <TabsList>
+        <TabsList className="mb-4">
           {sortedTournaments.map((tournament) => (
             <TabsTrigger key={tournament.id} value={tournament.id}>
               {tournament.name}
@@ -58,6 +58,6 @@ export default async function Tournaments() {
     );
   } catch (error) {
     console.error("Error in Tournaments component:", error);
-    return <div>Failed to load tournaments data. Please try again later.</div>;
+    return <div className="text-center p-4 text-destructive">Failed to load tournaments data. Please try again later.</div>;
   }
 }
