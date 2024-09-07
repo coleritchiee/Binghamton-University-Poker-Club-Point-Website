@@ -48,7 +48,7 @@ export default function Tournaments({ data }: TournamentsProps) {
                   key={result.rank}
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.2, delay: index * 0.02 }}
+                  transition={{ duration: 0.2, delay: index * 0.015 }}
                   className="border-b border-muted"
                 >
                   <TableCell className="font-medium">{result.rank}</TableCell>

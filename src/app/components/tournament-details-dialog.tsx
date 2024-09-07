@@ -38,7 +38,6 @@ type TournamentDetailsDialogProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onTournamentUpdated: () => void;
-  onTournamentDeleted: () => void;
 }
 
 export default function TournamentDetailsDialog({

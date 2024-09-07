@@ -69,7 +69,6 @@ export async function getMeetingById(meetingId: string): Promise<Meeting | null>
         results: meetingData.results || []
       }
     } else {
-      console.log("No such meeting!")
       return null
     }
   } catch (error) {
@@ -85,7 +84,6 @@ export async function addResult(meetingId: string, result: {
   hourGame: boolean
 }): Promise<void> {
   try {
-    console.log(result.playerId)
     const meetingRef = doc(db, 'meetings', meetingId);
     const playerRef = doc(db, "players/"+result.playerId);
 
@@ -130,7 +128,6 @@ export async function addResult(meetingId: string, result: {
         points: increment(points)
       });
 
-      console.log(`Successfully added result for player ${playerName} to meeting ${meetingId}`);
     });
   } catch (error) {
     console.error("Error adding result:", error);
@@ -223,18 +220,15 @@ export async function getLeaderboardData(): Promise<LeaderboardEntry[]> {
 
 export async function getMeetingsData(): Promise<Meeting[]> {
   try {
-    console.log("Fetching meetings data...");
     const meetingsRef = collection(db, 'meetings');
     const querySnapshot = await getDocs(meetingsRef);
     
     if (querySnapshot.empty) {
-      console.log("No meetings found in the database.");
       return [];
     }
 
     const meetings = querySnapshot.docs.map(doc => {
       const data = doc.data();
-      console.log("Raw meeting data:", data);
       
       let results: MeetingResult[];
       if (Array.isArray(data.results)) {
@@ -263,12 +257,9 @@ export async function getMeetingsData(): Promise<Meeting[]> {
         name: data.name as string,
         results: results,
       };
-      
-      console.log("Processed meeting:", meeting);
       return meeting;
     });
 
-    console.log("Meetings fetched successfully:", meetings);
     return meetings;
   } catch (error) {
     console.error("Error fetching meetings data:", error);
@@ -372,7 +363,6 @@ export async function deleteTournament(tournamentId: string): Promise<void> {
       });
     });
 
-    console.log(`Tournament ${tournamentId} deleted successfully`);
   } catch (error) {
     console.error("Error deleting tournament:", error);
     throw new Error('Failed to delete tournament. Please try again.');
@@ -517,7 +507,7 @@ export async function addTournamentResult(tournamentId: string, newResult: Tourn
       }
       return (b.knockouts || 0) - (a.knockouts || 0)
     })
-    
+
     const recalculatedResults = calculateTournamentPoints({
       ...tournament,
       results: updatedResults
@@ -663,25 +653,17 @@ export async function finishTournament(tournamentId: string): Promise<void> {
   const tournamentRef = doc(db, 'tournaments', tournamentId)
   
   try {
-    console.log('Starting to finish tournament:', tournamentId)
     const tournamentDoc = await getDoc(tournamentRef)
     
     if (!tournamentDoc.exists()) {
-      console.log('Tournament not found')
       throw new Error('Tournament not found')
     }
-
-    console.log('Tournament found, calculating points')
     const tournament = tournamentDoc.data() as Tournament
     const updatedResults = calculateTournamentPoints(tournament)
-
-    console.log('Updating tournament document')
     await updateDoc(tournamentRef, { 
       isActive: false,
       results: updatedResults
     })
-
-    console.log('Tournament document updated, now updating player points')
     const batch = writeBatch(db)
     const playerUpdates: { ref: DocumentReference, points: number }[] = []
 
@@ -693,24 +675,17 @@ export async function finishTournament(tournamentId: string): Promise<void> {
       })
       playerUpdates.push({ ref: playerRef, points: result.points })
     }
-    
-    console.log('Committing batch update for player points')
     await batch.commit()
 
-    console.log('Batch update committed successfully')
-
-    console.log('Verifying player updates')
     for (const update of playerUpdates) {
       const playerDoc = await getDoc(update.ref)
       if (playerDoc.exists()) {
         const playerData = playerDoc.data() as Player
-        console.log(`Player ${playerDoc.id} updated. New points: ${playerData.points}`)
       } else {
         console.error(`Player document ${update.ref.path} not found after update`)
       }
     }
 
-    console.log('Tournament finished successfully')
   } catch (error) {
     console.error('Error finishing tournament:', error)
     if (error instanceof Error) {

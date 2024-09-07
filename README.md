@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Binghamton University Poker Club Website
 
-## Getting Started
+Repository for the Binghamton University Poker Club's point tracking and tournament management system.
+Designed with Next.js and shadcn
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Club Members
+- **View Leaderboard**: Check standings and compare with other members.
+- **View Meeting and Tournament Results**: See the where each player earned their points.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### E-Board Members
+- **Manage Points**: Update points after tournaments or weekly meetings. Point calculations are done automatically and only need rank/knockout info.
+- **Track Tournament Progression**: Create active tournament in which allows eboard members to input knockouts as the happen.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+###Admin Panel
+![adminPanel](readme-img/edit-options.png)
+Everying in the admin panel is blocked behind a password so only authorized people can make adjustments to score.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+###Player Autocomplete
+![playerAutocomplete](readme-img/player-list.png)
 
-## Learn More
+Player names are automatically filled in as you type so you can ensure you are adding the points to the correct players.
+Everywhere there is place to enter a name it uses this.
+The player list button also give a option to add member to the database, so they become searchable.
 
-To learn more about Next.js, take a look at the following resources:
+###Weekly Meetings Settings
+![meetingList](readme-img/meeting-list.png)
+![addWeeklyMeeting](readme-img/add-weekly-meeting.png)
+![meetingDetails](readme-img/meeting-details.png)
+![addWeelkyMeetingResult](readme-img/add-new-meeting-result.png)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+###Tournament Settings
+![tournamentList](readme-img/tournament-list.png)
+![addTournament](readme-img/create-new-tournament.png)
+![tournamentDetails](readme-img/tournament-details.png)
+![addTournamentResult](readme-img/add-tournament-result.png)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+###Tournament Dealers
+Tournament Dealers get a special password to be able to enter knockouts as they happen.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+![eboardAccess](readme-img/eboard-access.png)
+![activeTournaments](readme-img/active-tournaments.png)
+![addKnockout](readme-img/add-knockout.png)

@@ -25,12 +25,10 @@ export default function PlayersListDialog({ isOpen, onOpenChange }: PlayersListD
 
   const handleSelectPlayer = (player: Player) => {
     setSelectedPlayer(player.id)
-    console.log("Selected player:", player.id)
   }
 
   const handleAddPlayerSuccess = () => {
     setRefreshKey(prevKey => prevKey + 1)
-    console.log("Player added successfully")
   }
 
   return (

@@ -123,8 +123,8 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
           onOpenChange={(open) => !open && setSelectedOption(null)}
           title="Select a Meeting"
           items={meetings}
-          onSelectItem={(item) => console.log('Selected meeting:', item)}
-          onCreateNew={() => console.log('Creating new meeting')}
+          onSelectItem={(item)=>{}}
+          onCreateNew={()=>{}}
           itemType="weekly-meetings"
           onRefresh={handleRefresh}
         />
