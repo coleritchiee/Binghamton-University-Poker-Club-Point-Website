@@ -100,8 +100,7 @@ export default function SelectTournamentItemDialog({
           tournament={selectedTournament}
           isOpen={isDetailsOpen}
           onOpenChange={setIsDetailsOpen}
-          onTournamentUpdated={handleTournamentUpdated}
-        />
+          onTournamentUpdated={handleTournamentUpdated}/>
       )}
 
       <CreateTournamentDialog

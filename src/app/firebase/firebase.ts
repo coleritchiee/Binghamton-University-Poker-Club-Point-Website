@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy, limit, DocumentData, doc, setDoc, addDoc, deleteDoc, updateDoc, arrayRemove, getDoc, arrayUnion, increment, writeBatch, DocumentReference } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, orderBy, limit, DocumentData, doc, setDoc, addDoc, deleteDoc, updateDoc, arrayRemove, getDoc, arrayUnion, increment, writeBatch, DocumentReference, runTransaction } from 'firebase/firestore';
 import { LeaderboardEntry, Meeting, Tournament, MeetingResult, TournamentResult, Player} from '../types';
 
 const firebaseConfig = {
@@ -85,37 +85,60 @@ export async function addResult(meetingId: string, result: {
   hourGame: boolean
 }): Promise<void> {
   try {
-    const meetingRef = doc(db, 'meetings', meetingId)
-    const playerRef = doc(db, 'players', result.playerId)
+    console.log(result.playerId)
+    const meetingRef = doc(db, 'meetings', meetingId);
+    const playerRef = doc(db, "players/"+result.playerId);
 
-    let points = result.knockouts * 3
-    if (result.rank === 1) points += 20
-    else if (result.rank === 2) points += 10
-    else if (result.rank === 3) points += 6
+    await runTransaction(db, async (transaction) => {
+      const playerSnap = await transaction.get(playerRef);
+      const meetingSnap = await transaction.get(meetingRef);
 
-    if (result.hourGame) points = Math.floor(points / 2)
+      if (!playerSnap.exists()) {
+        throw new Error(`Player with ID ${result.playerId} not found`);
+      }
 
-    const playerSnap = await getDoc(playerRef)
-    const playerName = playerSnap.data()?.name || 'Unknown Player'
+      if (!meetingSnap.exists()) {
+        throw new Error(`Meeting with ID ${meetingId} not found`);
+      }
 
-    const newResult: MeetingResult = {
-      name: playerName,
-      rank: result.rank,
-      knockouts: result.knockouts,
-      hourGame: result.hourGame,
-      points: points
-    }
+      const playerData = playerSnap.data();
+      const playerName = playerData?.name || 'Unknown Player';
 
-    await updateDoc(meetingRef, {
-      results: arrayUnion(newResult)
-    })
+      let points = result.knockouts * 3;
+      if (result.rank === 1) points += 20;
+      else if (result.rank === 2) points += 10;
+      else if (result.rank === 3) points += 6;
 
-    await updateDoc(playerRef, {
-      points: increment(points)
-    })
+      if (result.hourGame) points = Math.floor(points / 2);
+
+      const newResult: MeetingResult = {
+        name: playerName,
+        rank: result.rank,
+        knockouts: result.knockouts,
+        hourGame: result.hourGame,
+        points: points
+      };
+
+      const meetingData = meetingSnap.data();
+      const currentResults = meetingData?.results || [];
+
+      transaction.update(meetingRef, {
+        results: arrayUnion(newResult)
+      });
+
+      transaction.update(playerRef, {
+        points: increment(points)
+      });
+
+      console.log(`Successfully added result for player ${playerName} to meeting ${meetingId}`);
+    });
   } catch (error) {
-    console.error("Error adding result:", error)
-    throw error
+    console.error("Error adding result:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to add result: ${error.message}`);
+    } else {
+      throw new Error('Failed to add result due to an unknown error');
+    }
   }
 }
 
@@ -172,18 +195,26 @@ export async function getPlayersData(): Promise<Player[]> {
 
 export async function getLeaderboardData(): Promise<LeaderboardEntry[]> {
   try {
-    const playersRef = collection(db, 'players');
-    const q = query(playersRef, orderBy('points', 'desc'), limit(100));
-    const querySnapshot = await getDocs(q);
+    const leaderboardRef = doc(db, 'leaderboard', 'leaderboardinfo');
+    const leaderboardSnap = await getDoc(leaderboardRef);
     
-    return querySnapshot.docs.map((doc, index): LeaderboardEntry => {
-      const data = doc.data();
-      return {
-        rank: index + 1, 
-        name: data.name as string,
-        points: data.points as number,
-      };
-    });
+    if (!leaderboardSnap.exists()) {
+      console.error("Leaderboard document not found");
+      throw new Error("Leaderboard data not available");
+    }
+
+    const leaderboardData = leaderboardSnap.data();
+    
+    if (!leaderboardData || !Array.isArray(leaderboardData.rankings)) {
+      console.error("Invalid leaderboard data structure");
+      throw new Error("Invalid leaderboard data");
+    }
+
+    return leaderboardData.rankings.map((entry: any): LeaderboardEntry => ({
+      rank: entry.rank,
+      name: entry.name,
+      points: entry.points,
+    }));
   } catch (error) {
     console.error("Error fetching leaderboard data:", error);
     throw new Error("Failed to fetch leaderboard data");
@@ -310,28 +341,41 @@ export async function deleteTournamentResult(tournamentId: string, result: Tourn
 }
 
 export async function deleteTournament(tournamentId: string): Promise<void> {
+  const tournamentRef = doc(db, 'tournaments', tournamentId);
+
   try {
-    const tournamentRef = doc(db, 'tournaments', tournamentId)
-    const tournamentSnap = await getDoc(tournamentRef)
+    await runTransaction(db, async (transaction) => {
+      const tournamentDoc = await transaction.get(tournamentRef);
 
-    if (!tournamentSnap.exists()) {
-      throw new Error("Tournament not found")
-    }
+      if (!tournamentDoc.exists()) {
+        throw new Error("Tournament not found");
+      }
 
-    const tournamentData = tournamentSnap.data() as Tournament
-    const batch = writeBatch(db)
-    for (const result of tournamentData.results) {
-      const playerRef = doc(db, 'players', result.name.toLowerCase().replace(/\s+/g, ''))
-      batch.update(playerRef, {
-        points: increment(-result.points)
-      })
-    }
-    batch.delete(tournamentRef)
+      const tournamentData = tournamentDoc.data() as Tournament;
 
-    await batch.commit()
+      const playerDocs = await Promise.all(
+        tournamentData.results.map(async (result) => {
+          const playerRef = doc(db, 'players', result.name.toLowerCase().replace(/\s+/g, ''));
+          return transaction.get(playerRef);
+        })
+      );
+      transaction.delete(tournamentRef);
+
+      playerDocs.forEach((playerDoc, index) => {
+        if (playerDoc.exists()) {
+          const currentPoints = playerDoc.data().points || 0;
+          const pointsToRemove = tournamentData.results[index].points;
+          transaction.update(playerDoc.ref, {
+            points: Math.max(0, currentPoints - pointsToRemove)
+          });
+        }
+      });
+    });
+
+    console.log(`Tournament ${tournamentId} deleted successfully`);
   } catch (error) {
-    console.error("Error deleting tournament:", error)
-    throw error
+    console.error("Error deleting tournament:", error);
+    throw new Error('Failed to delete tournament. Please try again.');
   }
 }
 
@@ -446,11 +490,145 @@ export async function updateTournament(tournament: Tournament): Promise<void> {
   }
 }
 
-export async function addTournamentResult(tournamentId: string, result: TournamentResult): Promise<void> {
+export async function addTournamentResult(tournamentId: string, newResult: TournamentResult): Promise<void> {
   const tournamentRef = doc(db, 'tournaments', tournamentId)
-  await updateDoc(tournamentRef, {
-    results: arrayUnion(result)
-  })
+  const batch = writeBatch(db)
+
+  try {
+    const tournamentDoc = await getDoc(tournamentRef)
+    if (!tournamentDoc.exists()) {
+      throw new Error('Tournament not found')
+    }
+
+    const tournament = tournamentDoc.data() as Tournament
+
+    const updatedResults = tournament.results.map(r => {
+      if (r.rank >= newResult.rank) {
+        return { ...r, rank: r.rank + 1 }
+      }
+      return r
+    })
+
+    updatedResults.push(newResult)
+
+    updatedResults.sort((a, b) => {
+      if (a.rank !== b.rank) {
+        return a.rank - b.rank
+      }
+      return (b.knockouts || 0) - (a.knockouts || 0)
+    })
+    
+    const recalculatedResults = calculateTournamentPoints({
+      ...tournament,
+      results: updatedResults
+    })
+
+    batch.update(tournamentRef, { results: recalculatedResults })
+
+    for (const result of recalculatedResults) {
+      const playerDocId = result.name.toLowerCase().replace(/\s+/g, '')
+      const playerRef = doc(db, 'players', playerDocId)
+      const oldResult = tournament.results.find(r => r.name === result.name)
+      const pointDifference = result.points - (oldResult?.points || 0)
+      batch.update(playerRef, {
+        points: increment(pointDifference)
+      })
+    }
+
+    await batch.commit()
+  } catch (error) {
+    console.error('Error adding result to tournament:', error)
+    throw new Error('Failed to add result to tournament. Please try again.')
+  }
+}
+
+export async function deleteResultFromTournament(tournamentId: string, playerName: string): Promise<void> {
+  const tournamentRef = doc(db, 'tournaments', tournamentId)
+  const batch = writeBatch(db)
+
+  try {
+    const tournamentDoc = await getDoc(tournamentRef)
+    if (!tournamentDoc.exists()) {
+      throw new Error('Tournament not found')
+    }
+
+    const tournament = tournamentDoc.data() as Tournament
+    const deletedResult = tournament.results.find(r => r.name === playerName)
+    if (!deletedResult) {
+      throw new Error('Player result not found in tournament')
+    }
+
+    const playerDocId = playerName.toLowerCase().replace(/\s+/g, '')
+    const playerRef = doc(db, 'players', playerDocId)
+    batch.update(playerRef, {
+      points: increment(-deletedResult.points)
+    })
+
+    const updatedResults = tournament.results
+      .filter(r => r.name !== playerName)
+      .map(r => {
+        if (r.rank > deletedResult.rank) {
+          return { ...r, rank: r.rank - 1 }
+        }
+        return r
+      })
+
+    updatedResults.sort((a, b) => {
+      if (a.rank !== b.rank) {
+        return a.rank - b.rank
+      }
+      return (b.knockouts || 0) - (a.knockouts || 0)
+    })
+
+    const recalculatedResults = calculateTournamentPoints({
+      ...tournament,
+      results: updatedResults
+    })
+
+    batch.update(tournamentRef, { results: recalculatedResults })
+
+    for (const result of recalculatedResults) {
+      const playerDocId = result.name.toLowerCase().replace(/\s+/g, '')
+      const playerRef = doc(db, 'players', playerDocId)
+      const oldResult = tournament.results.find(r => r.name === result.name)
+      const pointDifference = result.points - (oldResult?.points || 0)
+      batch.update(playerRef, {
+        points: increment(pointDifference)
+      })
+    }
+
+    await batch.commit()
+  } catch (error) {
+    console.error('Error deleting result from tournament:', error)
+    throw new Error('Failed to delete result from tournament. Please try again.')
+  }
+}
+
+export async function updateLeaderboard(): Promise<void> {
+  try {
+
+    const playersRef = collection(db, 'players')
+    const playersSnapshot = await getDocs(playersRef)
+    const players = playersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Player))
+
+    const sortedPlayers = players.sort((a, b) => b.points - a.points)
+
+    const leaderboardData = sortedPlayers.map((player, index) => ({
+      rank: index + 1,
+      name: player.name,
+      points: player.points
+    }))
+
+    const leaderboardRef = doc(db, 'leaderboard', 'leaderboardinfo')
+    await setDoc(leaderboardRef, { 
+      lastUpdated: new Date().toISOString(),
+      rankings: leaderboardData 
+    })
+
+  } catch (error) {
+    console.error('Error updating leaderboard:', error)
+    throw new Error('Failed to update leaderboard. Please try again.')
+  }
 }
 
 function calculateTournamentPoints(tournament: Tournament): TournamentResult[] {

@@ -7,9 +7,9 @@ export default function PokerClubTabs() {
   return (
     <Tabs defaultValue="leaderboard" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-        <TabsTrigger value="weekly-meetings">Weekly Meetings</TabsTrigger>
-        <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+        <TabsTrigger value="leaderboard" className="px-2 py-1.5">Leaderboard</TabsTrigger>
+        <TabsTrigger value="weekly-meetings" className="px-2 py-1.5">Weekly Meetings</TabsTrigger>
+        <TabsTrigger value="tournaments" className="px-2 py-1.5">Tournaments</TabsTrigger>
       </TabsList>
       <TabsContent value="leaderboard">
         <Leaderboard />

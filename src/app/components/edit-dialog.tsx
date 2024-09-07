@@ -12,8 +12,9 @@ import {
 import SelectItemDialog from './select-item-dialog'
 import SelectTournamentItemDialog from './select-tournament-item-dialog'
 import PlayersListDialog from './players-list-dialog'
-import { getMeetingsData, getTournaments } from '../firebase/firebase'
+import { getMeetingsData, getTournaments, updateLeaderboard } from '../firebase/firebase'
 import { Meeting, Tournament } from '../types'
+import { toast } from "@/hooks/use-toast"
 
 type EditDialogProps = {
   isOpen: boolean;
@@ -59,6 +60,28 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
     }
   }
 
+  const handleUpdateLeaderboard = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      await updateLeaderboard()
+      toast({
+        title: "Leaderboard Updated",
+        description: "The leaderboard has been successfully updated.",
+      })
+    } catch (err) {
+      console.error("Error updating leaderboard:", err)
+      setError("Failed to update leaderboard. Please try again.")
+      toast({
+        title: "Error",
+        description: "Failed to update leaderboard. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -79,7 +102,11 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
             <Button onClick={() => handleEdit('players')}>
               Players List
             </Button>
+            <Button onClick={handleUpdateLeaderboard} disabled={isLoading}>
+              {isLoading ? 'Updating...' : 'Update Leaderboard'}
+            </Button>
           </div>
+          {error && <div className="text-sm text-destructive">{error}</div>}
         </DialogContent>
       </Dialog>
 
@@ -111,9 +138,6 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
           onRefresh={handleRefresh}
         />
       )}
-
-      {isLoading && <div>Loading...</div>}
-      {error && <div className="text-destructive">{error}</div>}
     </>
   )
 }

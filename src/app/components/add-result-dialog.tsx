@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PlayerAutocomplete } from './player-autocomplete'
 import { addResult } from '../firebase/firebase'
+import { Player } from '../types'
 
 type AddResultDialogProps = {
   isOpen: boolean;
@@ -22,19 +23,27 @@ type AddResultDialogProps = {
 }
 
 export default function AddResultDialog({ isOpen, onOpenChange, onSuccess, meetingId }: AddResultDialogProps) {
-  const [playerId, setPlayerId] = useState('')
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [rank, setRank] = useState('')
   const [knockouts, setKnockouts] = useState('')
   const [isHourGame, setIsHourGame] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const resetForm = () => {
+    setSelectedPlayer(null)
+    setRank('')
+    setKnockouts('')
+    setIsHourGame(false)
+    setError(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
-    if (!playerId || !rank || !knockouts) {
+    if (!selectedPlayer || !rank || !knockouts) {
       setError("Please fill in all fields.")
       setIsLoading(false)
       return
@@ -51,7 +60,7 @@ export default function AddResultDialog({ isOpen, onOpenChange, onSuccess, meeti
 
     try {
       await addResult(meetingId, {
-        playerId,
+        playerId: selectedPlayer.id,
         rank: rankNum,
         knockouts: knockoutsNum,
         hourGame: isHourGame
@@ -61,21 +70,21 @@ export default function AddResultDialog({ isOpen, onOpenChange, onSuccess, meeti
       resetForm()
     } catch (err) {
       console.error("Error adding result:", err)
-      setError("Failed to add result. Please try again.")
+      if (err instanceof Error) {
+        setError(`Failed to add result: ${err.message}`)
+      } else {
+        setError("An unknown error occurred while adding the result.")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  const resetForm = () => {
-    setPlayerId('')
-    setRank('')
-    setKnockouts('')
-    setIsHourGame(false)
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) resetForm()
+      onOpenChange(open)
+    }}>
       <DialogContent className="sm:max-w-[425px] bg-background/80 backdrop-blur-sm">
         <DialogHeader>
           <DialogTitle>Add New Result</DialogTitle>
@@ -86,7 +95,7 @@ export default function AddResultDialog({ isOpen, onOpenChange, onSuccess, meeti
               Player
             </Label>
             <div className="col-span-3">
-              <PlayerAutocomplete onSelect={setPlayerId} />
+              <PlayerAutocomplete onSelect={setSelectedPlayer} />
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

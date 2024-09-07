@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { addTournamentResult } from '../firebase/firebase'
 import { PlayerAutocomplete } from './player-autocomplete'
 import { Player } from '../types'
+import { toast } from "@/hooks/use-toast"
 
 type AddTournamentResultDialogProps = {
   isOpen: boolean;
@@ -48,9 +49,19 @@ export default function AddTournamentResultDialog({
         rank
       })
       onResultAdded()
+      toast({
+        title: "Result Added",
+        description: `${name}'s result has been added to the tournament.`,
+      })
+      onOpenChange(false)
     } catch (err) {
       console.error("Error adding result:", err)
       setError("Failed to add result. Please try again.")
+      toast({
+        title: "Error",
+        description: "Failed to add result. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsAdding(false)
     }
@@ -91,18 +102,6 @@ export default function AddTournamentResultDialog({
               />
             </div>
           )}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="points" className="text-right">
-              Points
-            </Label>
-            <Input
-              id="points"
-              type="number"
-              value={points}
-              onChange={(e) => setPoints(Number(e.target.value))}
-              className="col-span-3"
-            />
-          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="rank" className="text-right">
               Rank

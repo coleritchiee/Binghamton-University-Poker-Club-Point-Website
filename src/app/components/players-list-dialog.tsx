@@ -11,6 +11,7 @@ import {
 import { PlayerAutocomplete } from './player-autocomplete'
 import { Plus } from 'lucide-react'
 import AddPlayerDialog from './add-player-dialog'
+import { Player } from '../types'
 
 type PlayersListDialogProps = {
   isOpen: boolean;
@@ -22,9 +23,9 @@ export default function PlayersListDialog({ isOpen, onOpenChange }: PlayersListD
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const handleSelectPlayer = (playerId: string) => {
-    setSelectedPlayer(playerId)
-    console.log("Selected player:", playerId)
+  const handleSelectPlayer = (player: Player) => {
+    setSelectedPlayer(player.id)
+    console.log("Selected player:", player.id)
   }
 
   const handleAddPlayerSuccess = () => {

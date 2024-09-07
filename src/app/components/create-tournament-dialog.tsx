@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { addTournament } from '../firebase/firebase'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type CreateTournamentDialogProps = {
   isOpen: boolean;
@@ -97,10 +98,10 @@ export default function CreateTournamentDialog({
             <Label htmlFor="isActive" className="text-right">
               Active
             </Label>
-            <Switch
+            <Checkbox
               id="isActive"
               checked={isActive}
-              onCheckedChange={setIsActive}
+              onCheckedChange={(checked) =>setIsActive(checked as boolean)}
             />
           </div>
         </div>
