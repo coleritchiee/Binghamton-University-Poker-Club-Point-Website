@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getMeetingsData } from '../firebase/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
@@ -15,57 +13,25 @@ import {
 } from "@/components/ui/table"
 import { Meeting, MeetingResult } from '../types';
 
-export default function WeeklyMeetings() {
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type WeeklyMeetingsProps = {
+  data: Meeting[];
+}
 
-  useEffect(() => {
-    const fetchMeetings = async () => {
-      try {
-        const fetchedMeetings = await getMeetingsData();
-        const sortedMeetings = fetchedMeetings.map(meeting => ({
-          ...meeting,
-          results: [...meeting.results].sort((a, b) => b.points - a.points)
-        })).sort((a, b) => {
-          const dateA = new Date(new Date().getFullYear(), parseInt(a.name.split('/')[0]) - 1, parseInt(a.name.split('/')[1]));
-          const dateB = new Date(new Date().getFullYear(), parseInt(b.name.split('/')[0]) - 1, parseInt(b.name.split('/')[1]));
-          return dateB.getTime() - dateA.getTime();
-        });
-        setMeetings(sortedMeetings);
-      } catch (err) {
-        console.error("Error fetching meetings:", err);
-        setError("Failed to load weekly meetings data. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMeetings();
-  }, []);
-
-  if (isLoading) {
-    return <div className="text-center p-4 text-muted-foreground">Loading weekly meetings data...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center p-4 text-destructive">{error}</div>;
-  }
-
-  if (meetings.length === 0) {
+export default function WeeklyMeetings({ data }: WeeklyMeetingsProps) {
+  if (data.length === 0) {
     return <div className="text-center p-4 text-muted-foreground">No weekly meetings data available.</div>;
   }
 
   return (
-    <Tabs defaultValue={meetings[0]?.id} className="text-foreground">
+    <Tabs defaultValue={data[0]?.id} className="text-foreground">
       <TabsList className="mb-4 flex flex-wrap bg-muted">
-        {meetings.map((meeting) => (
+        {data.map((meeting) => (
           <TabsTrigger key={meeting.id} value={meeting.id} className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
             {meeting.name}
           </TabsTrigger>
         ))}
       </TabsList>
-      {meetings.map((meeting) => (
+      {data.map((meeting) => (
         <TabsContent key={meeting.id} value={meeting.id}>
           <Table>
             <TableCaption>{meeting.name} Results</TableCaption>

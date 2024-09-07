@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getTournaments } from '../firebase/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
@@ -15,55 +13,25 @@ import {
 } from "@/components/ui/table"
 import { Tournament, TournamentResult } from '../types';
 
-export default function Tournaments() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type TournamentsProps = {
+  data: Tournament[];
+}
 
-  useEffect(() => {
-    const fetchTournaments = async () => {
-      try {
-        const allTournaments = await getTournaments();
-        const nonActiveTournaments = allTournaments.filter(tournament => !tournament.isActive);
-        const sortedTournaments = [...nonActiveTournaments].sort((a, b) => {
-          const dateA = new Date(new Date().getFullYear(), parseInt(a.name.split('/')[0]) - 1, parseInt(a.name.split('/')[1]));
-          const dateB = new Date(new Date().getFullYear(), parseInt(b.name.split('/')[0]) - 1, parseInt(b.name.split('/')[1]));
-          return dateB.getTime() - dateA.getTime();
-        });
-        setTournaments(sortedTournaments);
-      } catch (err) {
-        console.error("Error fetching tournaments:", err);
-        setError("Failed to load tournaments data. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTournaments();
-  }, []);
-
-  if (isLoading) {
-    return <div className="text-center p-4 text-muted-foreground">Loading tournaments data...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center p-4 text-destructive">{error}</div>;
-  }
-
-  if (tournaments.length === 0) {
+export default function Tournaments({ data }: TournamentsProps) {
+  if (data.length === 0) {
     return <div className="text-center p-4 text-muted-foreground">No completed tournaments available.</div>;
   }
 
   return (
-    <Tabs defaultValue={tournaments[0]?.id} className="text-foreground">
+    <Tabs defaultValue={data[0]?.id} className="text-foreground">
       <TabsList className="mb-4 flex flex-wrap bg-muted">
-        {tournaments.map((tournament) => (
+        {data.map((tournament) => (
           <TabsTrigger key={tournament.id} value={tournament.id} className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
             {tournament.name}
           </TabsTrigger>
         ))}
       </TabsList>
-      {tournaments.map((tournament) => (
+      {data.map((tournament) => (
         <TabsContent key={tournament.id} value={tournament.id}>
           <Table>
             <TableCaption>{tournament.name} Results</TableCaption>

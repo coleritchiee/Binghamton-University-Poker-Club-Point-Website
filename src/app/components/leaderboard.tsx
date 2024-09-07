@@ -1,8 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getLeaderboardData } from '../firebase/firebase';
 import {
   Table,
   TableBody,
@@ -14,27 +12,11 @@ import {
 } from "@/components/ui/table"
 import { LeaderboardEntry } from '../types';
 
-export default function Leaderboard() {
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+type LeaderboardProps = {
+  data: LeaderboardEntry[];
+}
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getLeaderboardData();
-        setLeaderboardData(data);
-      } catch (err) {
-        console.error("Error fetching leaderboard data:", err);
-        setError("Failed to load leaderboard data. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
+export default function Leaderboard({ data }: LeaderboardProps) {
   const getChampEmoji = (rank: number) => {
     if (rank >= 1 && rank <= 8) {
       return '✅';
@@ -45,15 +27,7 @@ export default function Leaderboard() {
     }
   };
 
-  if (isLoading) {
-    return <div className="text-center p-4 text-muted-foreground">Loading leaderboard data...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center p-4 text-destructive">{error}</div>;
-  }
-
-  if (leaderboardData.length === 0) {
+  if (data.length === 0) {
     return <div className="text-center p-4 text-muted-foreground">No leaderboard data available.</div>;
   }
 
@@ -69,7 +43,7 @@ export default function Leaderboard() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {leaderboardData.map((entry, index) => (
+        {data.map((entry, index) => (
           <motion.tr
             key={entry.rank}
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
