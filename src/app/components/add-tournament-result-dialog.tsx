@@ -33,7 +33,6 @@ export default function AddTournamentResultDialog({
 }: AddTournamentResultDialogProps) {
   const [name, setName] = useState('')
   const [knockouts, setKnockouts] = useState(0)
-  const [points, setPoints] = useState(0)
   const [rank, setRank] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +44,7 @@ export default function AddTournamentResultDialog({
       await addTournamentResult(tournamentId, {
         name,
         knockouts: tournamentType === 'PKO' ? knockouts : 0,
-        points,
+        points: 0,
         rank
       })
       onResultAdded()

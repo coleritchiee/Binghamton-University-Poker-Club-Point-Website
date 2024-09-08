@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy, limit, DocumentData, doc, setDoc, addDoc, deleteDoc, updateDoc, arrayRemove, getDoc, arrayUnion, increment, writeBatch, DocumentReference, runTransaction } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, DocumentData, doc, setDoc, addDoc, updateDoc, arrayRemove, getDoc, arrayUnion, increment, writeBatch, DocumentReference, runTransaction } from 'firebase/firestore';
 import { LeaderboardEntry, Meeting, Tournament, MeetingResult, TournamentResult, Player} from '../types';
 
 const firebaseConfig = {
@@ -118,7 +118,6 @@ export async function addResult(meetingId: string, result: {
       };
 
       const meetingData = meetingSnap.data();
-      const currentResults = meetingData?.results || [];
 
       transaction.update(meetingRef, {
         results: arrayUnion(newResult)
@@ -207,7 +206,7 @@ export async function getLeaderboardData(): Promise<LeaderboardEntry[]> {
       throw new Error("Invalid leaderboard data");
     }
 
-    return leaderboardData.rankings.map((entry: any): LeaderboardEntry => ({
+    return leaderboardData.rankings.map((entry: DocumentData): LeaderboardEntry => ({
       rank: entry.rank,
       name: entry.name,
       points: entry.points,
@@ -676,16 +675,6 @@ export async function finishTournament(tournamentId: string): Promise<void> {
       playerUpdates.push({ ref: playerRef, points: result.points })
     }
     await batch.commit()
-
-    for (const update of playerUpdates) {
-      const playerDoc = await getDoc(update.ref)
-      if (playerDoc.exists()) {
-        const playerData = playerDoc.data() as Player
-      } else {
-        console.error(`Player document ${update.ref.path} not found after update`)
-      }
-    }
-
   } catch (error) {
     console.error('Error finishing tournament:', error)
     if (error instanceof Error) {

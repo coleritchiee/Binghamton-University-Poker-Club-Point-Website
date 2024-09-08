@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getTournaments, addKnockout, deletePlayerFromTournament } from '../firebase/firebase'
-import { Tournament, Player, TournamentResult } from '../types'
+import { Tournament, Player} from '../types'
 import {
   Dialog,
   DialogContent,

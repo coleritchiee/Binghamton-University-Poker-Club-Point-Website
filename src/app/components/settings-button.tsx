@@ -101,7 +101,7 @@ export default function SettingsButton() {
           <DialogHeader>
             <DialogTitle>Select View</DialogTitle>
             <DialogDescription>
-              Choose what you'd like to view.
+              Choose what you&apos;d like to view.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center space-x-4 py-4">

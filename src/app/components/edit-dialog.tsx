@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -123,7 +123,7 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
           onOpenChange={(open) => !open && setSelectedOption(null)}
           title="Select a Meeting"
           items={meetings}
-          onSelectItem={(item)=>{}}
+          onSelectItem={(item)=>{console.log(item)}}
           onCreateNew={()=>{}}
           itemType="weekly-meetings"
           onRefresh={handleRefresh}
