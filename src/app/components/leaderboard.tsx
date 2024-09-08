@@ -21,7 +21,7 @@ export default function Leaderboard({ data }: LeaderboardProps) {
     if (rank >= 1 && rank <= 8) {
       return '✅';
     } else if (rank >= 9 && rank <= 24) {
-      return '🛰️';
+      return '📡';
     } else {
       return '❌';
     }
