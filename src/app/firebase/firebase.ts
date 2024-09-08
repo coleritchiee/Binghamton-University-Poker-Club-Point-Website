@@ -117,8 +117,6 @@ export async function addResult(meetingId: string, result: {
         points: points
       };
 
-      const meetingData = meetingSnap.data();
-
       transaction.update(meetingRef, {
         results: arrayUnion(newResult)
       });
