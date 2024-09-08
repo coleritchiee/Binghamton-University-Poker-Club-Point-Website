@@ -2,6 +2,7 @@
 
 Repository for the Binghamton University Poker Club's point tracking and tournament management system.
 Designed with Next.js and shadcn
+Deployment can be found here: [[https://binghamton-university-poker-club.vercel.app/](https://binghamton-university-poker-club.vercel.app/)]
 
 ## Features
 

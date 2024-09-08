@@ -65,10 +65,25 @@ export default function PokerClubTabs() {
 
   return (
     <Tabs defaultValue="leaderboard" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="leaderboard" className="px-4 py-1.5">Leaderboard</TabsTrigger>
-        <TabsTrigger value="weekly-meetings" className="px-4 py-1.5">Weekly Meetings</TabsTrigger>
-        <TabsTrigger value="tournaments" className="px-4 py-1.5">Tournaments</TabsTrigger>
+      <TabsList className="flex w-full flex-wrap justify-between bg-muted p-1 h-14">
+        <TabsTrigger 
+          value="leaderboard" 
+          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+        >
+          Leaderboard
+        </TabsTrigger>
+        <TabsTrigger 
+          value="weekly-meetings" 
+          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+        >
+          Weekly Meetings
+        </TabsTrigger>
+        <TabsTrigger 
+          value="tournaments" 
+          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+        >
+          Tournaments
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="leaderboard">
         <Leaderboard data={leaderboardData} />
