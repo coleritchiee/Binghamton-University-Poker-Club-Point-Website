@@ -1,8 +1,9 @@
 # Binghamton University Poker Club Website
 
 Repository for the Binghamton University Poker Club's point tracking and tournament management system.
-Designed with Next.js and shadcn
+Designed with Next.js, shadcn, TailwindCSS, and Firebase
 Deployment can be found here: [[https://binghamton-university-poker-club.vercel.app/](https://binghamton-university-poker-club.vercel.app/)]
+Instructional Video/Demo can be found here:
 
 ## Features
 
@@ -19,11 +20,14 @@ Deployment can be found here: [[https://binghamton-university-poker-club.vercel.
 Everying in the admin panel is blocked behind a password so only authorized people can make adjustments to score.
 
 ### Player Autocomplete
-![playerAutocomplete](readme-img/player-list.png)
+![playerAutocomplete](readme-img/player-autocomplete.png)
 
 Player names are automatically filled in as you type so you can ensure you are adding the points to the correct players.
 Everywhere there is place to enter a name it uses this.
 The player list button also give a option to add member to the database, so they become searchable.
+
+### Player List
+![playerList](readme-img/player-list.png)
 
 ### Weekly Meetings Settings
 ![meetingList](readme-img/meeting-list.png)

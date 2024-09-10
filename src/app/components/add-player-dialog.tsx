@@ -35,7 +35,7 @@ export default function AddPlayerDialog({ isOpen, onOpenChange, onSuccess }: Add
       setPlayerName('')
     } catch (err) {
       console.error("Error adding player:", err)
-      setError("Failed to add player. Please try again.")
+      setError(""+err)
     } finally {
       setIsLoading(false)
     }

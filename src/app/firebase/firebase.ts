@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, DocumentData, doc, setDoc, addDoc, updateDoc, arrayRemove, getDoc, arrayUnion, increment, writeBatch, DocumentReference, runTransaction } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, DocumentData, doc, setDoc, addDoc, updateDoc, arrayRemove, getDoc, arrayUnion, increment, writeBatch, DocumentReference, runTransaction, deleteDoc } from 'firebase/firestore';
 import { LeaderboardEntry, Meeting, Tournament, MeetingResult, TournamentResult, Player} from '../types';
 
 const firebaseConfig = {
@@ -162,13 +162,49 @@ export async function addPlayer(name: string): Promise<void> {
   try {
     const playerId = name.toLowerCase().replace(/\s+/g, '')
     const playerRef = doc(db, 'players', playerId)
+    const playerDoc = await getDoc(playerRef)
+    
+    if (playerDoc.exists()) {
+      throw new Error(`Player with name "${name}" already exists`)
+    }
+
     await setDoc(playerRef, {
       name: name,
       points: 0
     })
   } catch (error) {
     console.error("Error adding player:", error)
-    throw error
+    if (error instanceof Error) {
+      throw new Error(`Failed to add player: ${error.message}`)
+    } else {
+      throw new Error('Failed to add player due to an unknown error')
+    }
+  }
+}
+
+export async function deletePlayer(playerId: string): Promise<void> {
+  try {
+    const playerRef = doc(db, 'players', playerId);
+    const playerSnap = await getDoc(playerRef);
+
+    if (!playerSnap.exists()) {
+      throw new Error('Player not found');
+    }
+
+    const playerData = playerSnap.data() as Player;
+
+    if (playerData.points > 0) {
+      throw new Error('Cannot delete player with more than 0 points');
+    }
+
+    await deleteDoc(playerRef);
+  } catch (error) {
+    console.error("Error deleting player:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to delete player: ${error.message}`);
+    } else {
+      throw new Error('Failed to delete player due to an unknown error');
+    }
   }
 }
 

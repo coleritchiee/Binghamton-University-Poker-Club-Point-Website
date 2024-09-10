@@ -53,7 +53,7 @@ export default function WeeklyMeetings({ data }: WeeklyMeetingsProps) {
                   transition={{ duration: 0.2, delay: index * 0.015 }}
                   className="border-b border-muted"
                 >
-                  <TableCell className="font-medium">{index + 1}</TableCell>
+                  <TableCell className="font-medium">{result.rank}</TableCell>
                   <TableCell>{result.name}</TableCell>
                   <TableCell>{result.knockouts}</TableCell>
                   <TableCell>{result.hourGame ? 'Yes' : 'No'}</TableCell>
