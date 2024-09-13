@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -46,7 +45,6 @@ export default function TournamentDetailsDialog({
   onOpenChange,
   onTournamentUpdated
 }: TournamentDetailsDialogProps) {
-  const [name, setName] = useState(tournament.name)
   const [type, setType] = useState(tournament.type)
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +57,6 @@ export default function TournamentDetailsDialog({
     try {
       await updateTournament({
         ...tournament,
-        name,
         type,
       })
       onTournamentUpdated()
@@ -177,12 +174,7 @@ export default function TournamentDetailsDialog({
               <Label htmlFor="name" className="text-right">
                 Name
               </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="col-span-3"
-              />
+              <div className="col-span-3 font-medium">{tournament.name}</div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="type" className="text-right">

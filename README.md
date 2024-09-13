@@ -3,7 +3,7 @@
 Repository for the Binghamton University Poker Club's point tracking and tournament management system.
 Designed with Next.js, shadcn, TailwindCSS, and Firebase
 Deployment can be found here: [[https://binghamton-university-poker-club.vercel.app/](https://binghamton-university-poker-club.vercel.app/)]
-Instructional Video/Demo can be found here:
+Instructional Video/Demo can be found here:[[https://youtu.be/BLfcymOlGgk](https://youtu.be/BLfcymOlGgk)]
 
 ## Features
 
