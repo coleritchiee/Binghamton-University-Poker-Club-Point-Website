@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getTournaments, addKnockout, deletePlayerFromTournament } from '../firebase/firebase'
+import { getTournaments, addKnockout, deletePlayerFromTournament, getTournamentById } from '../firebase/firebase'
 import { Tournament, Player} from '../types'
 import {
   Dialog,
@@ -62,12 +62,25 @@ export default function ActiveTournamentsDialog({ isOpen, onOpenChange }: Active
     }
   }, [isOpen])
 
-  const handleTournamentClick = (tournament: Tournament) => {
-    setSelectedTournament(tournament)
-    setIsKnockoutDialogOpen(true)
-    setKnockouts(0)
-    setSelectedPlayer(null)
-    setError(null)
+  const handleTournamentClick = async (tournament: Tournament) => {
+    try {
+      setIsLoading(true)
+      const updatedTournament = await getTournamentById(tournament.id)
+      if (updatedTournament) {
+        setSelectedTournament(updatedTournament)
+        setIsKnockoutDialogOpen(true)
+        setKnockouts(0)
+        setSelectedPlayer(null)
+        setError(null)
+      } else {
+        throw new Error("Tournament not found")
+      }
+    } catch (err) {
+      console.error("Error fetching tournament details:", err)
+      setError("Failed to load tournament details. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleAddKnockout = async () => {
@@ -119,8 +132,8 @@ export default function ActiveTournamentsDialog({ isOpen, onOpenChange }: Active
       const activeTournaments = updatedTournaments.filter(tournament => tournament.isActive)
       setTournaments(activeTournaments)
       if (selectedTournament) {
-        const updatedSelectedTournament = activeTournaments.find(t => t.id === selectedTournament.id)
-        setSelectedTournament(updatedSelectedTournament || null)
+        const updatedSelectedTournament = await getTournamentById(selectedTournament.id)
+        setSelectedTournament(updatedSelectedTournament)
       }
     } catch (err) {
       console.error("Error refreshing tournaments:", err)
