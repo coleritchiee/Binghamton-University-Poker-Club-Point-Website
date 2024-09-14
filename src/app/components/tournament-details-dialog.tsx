@@ -26,11 +26,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tournament, TournamentResult } from '../types'
-import { updateTournament, finishTournament, deleteResultFromTournament, deleteTournament } from '../firebase/firebase'
+import { Tournament, TournamentResult, Player } from '../types'
+import { updateTournament, finishTournament, deleteResultFromTournament, deleteTournament, addKnockout } from '../firebase/firebase'
 import AddTournamentResultDialog from './add-tournament-result-dialog'
 import { toast } from "@/hooks/use-toast"
 import { Trash2 } from 'lucide-react'
+import { PlayerAutocomplete } from './player-autocomplete'
+import { Input } from "@/components/ui/input"
 
 type TournamentDetailsDialogProps = {
   tournament: Tournament;
@@ -50,6 +52,10 @@ export default function TournamentDetailsDialog({
   const [error, setError] = useState<string | null>(null)
   const [isAddingResult, setIsAddingResult] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
+  const [isKnockoutDialogOpen, setIsKnockoutDialogOpen] = useState(false)
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
+  const [knockouts, setKnockouts] = useState<number>(0)
+  const [isAddingKnockout, setIsAddingKnockout] = useState(false)
 
   const handleUpdate = async () => {
     setIsUpdating(true)
@@ -131,7 +137,11 @@ export default function TournamentDetailsDialog({
   }
 
   const handleAddResult = () => {
-    setIsAddingResult(true)
+    if (tournament.isActive) {
+      setIsKnockoutDialogOpen(true)
+    } else {
+      setIsAddingResult(true)
+    }
   }
 
   const handleResultAdded = () => {
@@ -159,6 +169,37 @@ export default function TournamentDetailsDialog({
       })
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const handleAddKnockout = async () => {
+    if (!selectedPlayer) return
+    const isPlayerInTournament = tournament.results.some(
+      result => result.name.toLowerCase() === selectedPlayer.name.toLowerCase()
+    )
+
+    if (isPlayerInTournament) {
+      setError("This player is already in the tournament.")
+      return
+    }
+
+    setIsAddingKnockout(true)
+    try {
+      await addKnockout(tournament.id, selectedPlayer.name, knockouts)
+      onTournamentUpdated()
+      setIsKnockoutDialogOpen(false)
+      setSelectedPlayer(null)
+      setKnockouts(0)
+      setError(null)
+      toast({
+        title: "Knockout Added",
+        description: `${selectedPlayer.name} has been added to the tournament with ${knockouts} knockouts.`,
+      })
+    } catch (err) {
+      console.error("Error adding knockout:", err)
+      setError("Failed to add knockout. Please try again.")
+    } finally {
+      setIsAddingKnockout(false)
     }
   }
 
@@ -237,7 +278,9 @@ export default function TournamentDetailsDialog({
             </ScrollArea>
           )}
           <DialogFooter>
-            <Button onClick={handleAddResult}>Add Result</Button>
+            <Button onClick={handleAddResult}>
+              {tournament.isActive ? 'Add Knockout' : 'Add Result'}
+            </Button>
             <Button onClick={handleUpdate} disabled={isUpdating}>
               {isUpdating ? 'Updating...' : 'Update Tournament'}
             </Button>
@@ -260,6 +303,35 @@ export default function TournamentDetailsDialog({
         tournamentType={tournament.type}
         onResultAdded={handleResultAdded}
       />
+
+      <Dialog open={isKnockoutDialogOpen} onOpenChange={setIsKnockoutDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] bg-background/80 backdrop-blur-sm">
+          <DialogHeader>
+            <DialogTitle>{tournament.name} - Add Knockout</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <PlayerAutocomplete onSelect={setSelectedPlayer} />
+            {tournament.type === 'PKO' && (
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="knockouts">Knockouts</Label>
+                <Input
+                  id="knockouts"
+                  type="number"
+                  min="0"
+                  value={knockouts}
+                  onChange={(e) => setKnockouts(parseInt(e.target.value) || 0)}
+                />
+              </div>
+            )}
+            {error && <div className="text-sm text-destructive">{error}</div>}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAddKnockout} disabled={!selectedPlayer || isAddingKnockout}>
+              {isAddingKnockout ? 'Adding...' : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
