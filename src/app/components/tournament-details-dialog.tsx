@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tournament, TournamentResult, Player } from '../types'
-import { updateTournament, finishTournament, deleteResultFromTournament, deleteTournament, addKnockout } from '../firebase/firebase'
+import { updateTournament, finishTournament, deleteResultFromTournament, deleteTournament, addKnockout, deletePlayerFromTournament } from '../firebase/firebase'
 import AddTournamentResultDialog from './add-tournament-result-dialog'
 import { toast } from "@/hooks/use-toast"
 import { Trash2 } from 'lucide-react'
@@ -56,6 +56,7 @@ export default function TournamentDetailsDialog({
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [knockouts, setKnockouts] = useState<number>(0)
   const [isAddingKnockout, setIsAddingKnockout] = useState(false)
+  const [isDeletingPlayer, setIsDeletingPlayer] = useState(false)
 
   const handleUpdate = async () => {
     setIsUpdating(true)
@@ -117,7 +118,11 @@ export default function TournamentDetailsDialog({
     setIsUpdating(true)
     setError(null)
     try {
-      await deleteResultFromTournament(tournament.id, result.name)
+      if (tournament.isActive) {
+        await deletePlayerFromTournament(tournament.id, result.name)
+      } else {
+        await deleteResultFromTournament(tournament.id, result.name)
+      }
       onTournamentUpdated()
       toast({
         title: "Result Deleted",
@@ -253,10 +258,10 @@ export default function TournamentDetailsDialog({
                     <TableCell>{result.points}</TableCell>
                     <TableCell>
                       <Button
-                        variant="destructive"
-                        size="sm"
+                        variant={tournament.isActive ? "ghost" : "destructive"}
+                        size="icon"
                         onClick={() => handleDeleteResult(result)}
-                        disabled={isUpdating}
+                        disabled={isDeletingPlayer || isUpdating}
                       >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete result</span>
