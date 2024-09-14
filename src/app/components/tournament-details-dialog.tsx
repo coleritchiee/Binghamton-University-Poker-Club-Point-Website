@@ -56,7 +56,6 @@ export default function TournamentDetailsDialog({
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [knockouts, setKnockouts] = useState<number>(0)
   const [isAddingKnockout, setIsAddingKnockout] = useState(false)
-  const [isDeletingPlayer, setIsDeletingPlayer] = useState(false)
 
   const handleUpdate = async () => {
     setIsUpdating(true)
@@ -261,7 +260,7 @@ export default function TournamentDetailsDialog({
                         variant={tournament.isActive ? "ghost" : "destructive"}
                         size="icon"
                         onClick={() => handleDeleteResult(result)}
-                        disabled={isDeletingPlayer || isUpdating}
+                        disabled={isUpdating}
                       >
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete result</span>
