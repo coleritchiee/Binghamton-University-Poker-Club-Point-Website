@@ -440,7 +440,7 @@ export async function addKnockout(tournamentId: string, playerName: string, knoc
       results: [newResult, ...updatedResults]
     })
 
-    if (tournamentData.type === 'PKO') {
+    if (tournamentData.type === 'PKO'||tournamentData.type === 'KO') {
       const playerRef = doc(db, 'players', playerName.toLowerCase().replace(/\s+/g, ''))
       batch.update(playerRef, {
         knockouts: increment(knockouts)
@@ -678,7 +678,7 @@ function calculateTournamentPoints(tournament: Tournament): TournamentResult[] {
 
   return tournament.results.map((result, index) => ({
     ...result,
-    points: (pointsTable[index] || 5) + (result.knockouts ? result.knockouts * 2 : 0)
+    points: (pointsTable[index] || 5) + (tournament.type === "PKO" ? result.knockouts * 2 : tournament.type === "KO" ? result.knockouts * 5:0)
   }))
 }
 

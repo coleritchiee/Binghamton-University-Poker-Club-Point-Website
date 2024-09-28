@@ -43,7 +43,7 @@ export default function AddTournamentResultDialog({
     try {
       await addTournamentResult(tournamentId, {
         name,
-        knockouts: tournamentType === 'PKO' ? knockouts : 0,
+        knockouts: tournamentType === 'PKO'||tournamentType === 'KO' ? knockouts : 0,
         points: 0,
         rank
       })
@@ -87,7 +87,7 @@ export default function AddTournamentResultDialog({
               />
             </div>
           </div>
-          {tournamentType === 'PKO' && (
+          {tournamentType === 'PKO'||tournamentType === 'KO' && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="knockouts" className="text-right">
                 Knockouts

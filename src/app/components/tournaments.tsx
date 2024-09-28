@@ -22,6 +22,8 @@ export default function Tournaments({ data }: TournamentsProps) {
     return <div className="text-center p-4 text-muted-foreground">No completed tournaments available.</div>;
   }
 
+  const showKnockouts = (type: string) => type === 'PKO' || type === 'KO';
+
   return (
     <Tabs defaultValue={data[0]?.id} className="text-foreground">
       <TabsList className="mb-4 flex flex-wrap bg-muted">
@@ -34,11 +36,14 @@ export default function Tournaments({ data }: TournamentsProps) {
       {data.map((tournament) => (
         <TabsContent key={tournament.id} value={tournament.id}>
           <Table>
-            <TableCaption>{tournament.name} Results</TableCaption>
+            <TableCaption>{tournament.name} {tournament.type} Results</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[100px]">Rank</TableHead>
                 <TableHead>Name</TableHead>
+                {showKnockouts(tournament.type) && (
+                  <TableHead className="text-right">Knockouts</TableHead>
+                )}
                 <TableHead className="text-right">Points</TableHead>
               </TableRow>
             </TableHeader>
@@ -53,6 +58,9 @@ export default function Tournaments({ data }: TournamentsProps) {
                 >
                   <TableCell className="font-medium">{result.rank}</TableCell>
                   <TableCell>{result.name}</TableCell>
+                  {showKnockouts(tournament.type) && (
+                    <TableCell className="text-right">{result.knockouts || 0}</TableCell>
+                  )}
                   <TableCell className="text-right">{result.points}</TableCell>
                 </motion.tr>
               ))}

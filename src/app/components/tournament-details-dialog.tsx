@@ -233,6 +233,7 @@ export default function TournamentDetailsDialog({
                   <SelectItem value="Standard">Standard</SelectItem>
                   <SelectItem value="HeadsUp">Heads Up</SelectItem>
                   <SelectItem value="PKO">PKO</SelectItem>
+                  <SelectItem value="KO">KO</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -243,7 +244,7 @@ export default function TournamentDetailsDialog({
                 <TableRow>
                   <TableHead>Rank</TableHead>
                   <TableHead>Name</TableHead>
-                  {type === 'PKO' && <TableHead>Knockouts</TableHead>}
+                  {type === 'PKO'||type === 'KO' && <TableHead>Knockouts</TableHead>}
                   <TableHead>Points</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
@@ -253,7 +254,7 @@ export default function TournamentDetailsDialog({
                   <TableRow key={result.name}>
                     <TableCell>{result.rank}</TableCell>
                     <TableCell>{result.name}</TableCell>
-                    {type === 'PKO' && <TableCell>{result.knockouts}</TableCell>}
+                    {type === 'PKO'||type === 'KO' && <TableCell>{result.knockouts}</TableCell>}
                     <TableCell>{result.points}</TableCell>
                     <TableCell>
                       <Button
@@ -315,7 +316,7 @@ export default function TournamentDetailsDialog({
           </DialogHeader>
           <div className="py-4 space-y-4">
             <PlayerAutocomplete onSelect={setSelectedPlayer} />
-            {tournament.type === 'PKO' && (
+            {tournament.type === 'PKO'||type === 'KO' && (
               <div className="flex flex-col space-y-2">
                 <Label htmlFor="knockouts">Knockouts</Label>
                 <Input

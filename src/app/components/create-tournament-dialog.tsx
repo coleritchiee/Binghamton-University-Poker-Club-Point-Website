@@ -90,6 +90,7 @@ export default function CreateTournamentDialog({
                 <SelectItem value="Standard">Standard</SelectItem>
                 <SelectItem value="HeadsUp">Heads Up</SelectItem>
                 <SelectItem value="PKO">PKO</SelectItem>
+                <SelectItem value="KO">KO</SelectItem>
               </SelectContent>
             </Select>
           </div>
