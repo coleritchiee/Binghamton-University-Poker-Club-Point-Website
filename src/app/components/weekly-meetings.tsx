@@ -24,13 +24,15 @@ export default function WeeklyMeetings({ data }: WeeklyMeetingsProps) {
 
   return (
     <Tabs defaultValue={data[0]?.id} className="text-foreground">
-      <TabsList className="mb-4 flex flex-wrap bg-muted">
+      <div className="overflow-x-auto flex justify-center">
+      <TabsList className="mb-4 inline-flex bg-muted whitespace-nowrap">
         {data.map((meeting) => (
           <TabsTrigger key={meeting.id} value={meeting.id} className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground">
             {meeting.name}
           </TabsTrigger>
         ))}
       </TabsList>
+      </div>
       {data.map((meeting) => (
         <TabsContent key={meeting.id} value={meeting.id}>
           <Table>
