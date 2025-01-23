@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { type Tournament, type TournamentResult, Player } from "../types"
-import { updateChamp, deleteResultFromChamp, deleteChamp, addChampResult } from "../firebase/firebase"
+import { type Tournament, type TournamentResult} from "../types"
+import {deleteResultFromChamp, deleteChamp} from "../firebase/firebase"
 import AddChampResultDialog from "./add-champ-result-dialog"
 import { toast } from "@/hooks/use-toast"
 import { Trash2 } from "lucide-react"
@@ -28,21 +28,6 @@ export default function ChampsDetailsDialog({
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAddingResult, setIsAddingResult] = useState(false)
-  const [logs, setLogs] = useState<string[]>([])
-
-  const handleUpdate = async () => {
-    setIsUpdating(true)
-    setError(null)
-    try {
-      await updateChamp(tournament)
-      onChampUpdated()
-    } catch (err) {
-      console.error("Error updating championship:", err)
-      setError("Failed to update championship. Please try again.")
-    } finally {
-      setIsUpdating(false)
-    }
-  }
 
   const handleDeleteResult = async (result: TournamentResult) => {
     setIsUpdating(true)
@@ -147,15 +132,6 @@ export default function ChampsDetailsDialog({
             </Table>
           </ScrollArea>
           {error && <div className="text-sm text-destructive">{error}</div>}
-          {logs.length > 0 && (
-            <ScrollArea className="h-[200px] w-full border rounded-md p-4 mt-4">
-              {logs.map((log, index) => (
-                <div key={index} className="text-sm">
-                  {log}
-                </div>
-              ))}
-            </ScrollArea>
-          )}
           <DialogFooter>
             <Button onClick={handleAddResult}>Add Result</Button>
             <Button onClick={handleDeleteChamp} disabled={isUpdating} variant="destructive">
