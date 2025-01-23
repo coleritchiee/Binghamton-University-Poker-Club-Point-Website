@@ -5,23 +5,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Leaderboard from './leaderboard'
 import WeeklyMeetings from './weekly-meetings'
 import Tournaments from './tournaments'
-import { getLeaderboardData, getMeetingsData, getTournaments } from '../firebase/firebase'
+import Champions from './champions'
+import { getLeaderboardData, getMeetingsData, getTournaments, getChamps } from '../firebase/firebase'
 import { LeaderboardEntry, Meeting, Tournament } from '../types'
 
 export default function PokerClubTabs() {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [champs, setChamps] = useState<Tournament[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [leaderboard, meetingsData, tournamentsData] = await Promise.all([
+        const [leaderboard, meetingsData, tournamentsData, champsData] = await Promise.all([
           getLeaderboardData(),
           getMeetingsData(),
-          getTournaments()
+          getTournaments(),
+          getChamps()
         ])
 
         setLeaderboardData(leaderboard)
@@ -43,6 +46,27 @@ export default function PokerClubTabs() {
           return dateB.getTime() - dateA.getTime()
         })
         setTournaments(sortedTournaments)
+
+        const sortedChamps = champsData.sort((a, b) => {
+          const [seasonA, yearA] = a.name.split(" ")
+          const [seasonB, yearB] = b.name.split(" ")
+      
+          if (yearA !== yearB) {
+            return Number.parseInt(yearB) - Number.parseInt(yearA)
+          }
+      
+          if (seasonA === seasonB) {
+            return 0
+          }
+      
+          if (seasonA === "Spring") {
+            return 1
+          }
+      
+          return -1
+        })
+
+        setChamps(sortedChamps)
 
         setIsLoading(false)
       } catch (err) {
@@ -84,6 +108,12 @@ export default function PokerClubTabs() {
         >
           Tournaments
         </TabsTrigger>
+        <TabsTrigger 
+          value="champions" 
+          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+        >
+          Champions
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="leaderboard">
         <Leaderboard data={leaderboardData} />
@@ -93,6 +123,9 @@ export default function PokerClubTabs() {
       </TabsContent>
       <TabsContent value="tournaments">
         <Tournaments data={tournaments} />
+      </TabsContent>
+      <TabsContent value="champions">
+        <Champions data={champs} />
       </TabsContent>
     </Tabs>
   )

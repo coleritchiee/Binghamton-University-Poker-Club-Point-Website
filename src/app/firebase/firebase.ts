@@ -300,6 +300,26 @@ export async function getMeetingsData(): Promise<Meeting[]> {
   }
 }
 
+export async function getChamps(): Promise<Tournament[]>{
+  try {
+    const champsCollection = collection(db, 'champs')
+    const tournamentSnapshot = await getDocs(champsCollection)
+    return tournamentSnapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        name: data.name,
+        type: "Standard",
+        isActive: false,
+        results: data.results as TournamentResult[]
+      }
+    })
+  } catch (error) {
+    console.error("Error fetching tournaments:", error)
+    throw error
+  }
+}
+
 export async function getTournaments(): Promise<Tournament[]> {
   try {
     const tournamentsCollection = collection(db, 'tournaments')
@@ -410,6 +430,22 @@ export async function addTournament(tournament: Omit<Tournament, 'id'>): Promise
   } catch (error) {
     console.error("Error adding tournament:", error)
     throw error
+  }
+}
+
+export async function addChamp(champ: Omit<Tournament, "id">): Promise<string> {
+  try {
+    const champsCollection = collection(db, "champs")
+    const docRef = await addDoc(champsCollection, {
+      name: champ.name,
+      type: "Standard",
+      isActive: false,
+      results: champ.results || [],
+    })
+    return docRef.id
+  } catch (error) {
+    console.error("Error adding championship:", error)
+    throw new Error("Failed to add championship. Please try again.")
   }
 }
 
@@ -715,6 +751,84 @@ export async function finishTournament(tournamentId: string): Promise<void> {
       console.error('Error details:', error.message, error.stack)
     }
     throw new Error('Failed to finish tournament. Please try again.')
+  }
+}
+
+export async function updateChamp(champ: Tournament): Promise<void> {
+  try {
+    const champRef = doc(db, "champs", champ.id)
+
+    const updateData = {
+      name: champ.name,
+      results: champ.results,
+    }
+
+    await updateDoc(champRef, updateData)
+  } catch (error) {
+    console.error("Error updating championship:", error)
+    throw error
+  }
+}
+
+export async function deleteResultFromChamp(champId: string, playerName: string): Promise<void> {
+  const champRef = doc(db, "champs", champId)
+
+  try {
+    const champDoc = await getDoc(champRef)
+    if (!champDoc.exists()) {
+      throw new Error("Championship not found")
+    }
+
+    const champ = champDoc.data() as Tournament
+    const updatedResults = champ.results.filter((r) => r.name !== playerName)
+
+    const recalculatedResults = updatedResults.map((result, index) => ({
+      ...result,
+      rank: index + 1,
+    }))
+
+    await updateDoc(champRef, { results: recalculatedResults })
+  } catch (error) {
+    console.error("Error deleting result from championship:", error)
+    throw new Error("Failed to delete result from championship. Please try again.")
+  }
+}
+
+export async function deleteChamp(champId: string): Promise<void> {
+  const champRef = doc(db, "champs", champId)
+
+  try {
+    await deleteDoc(champRef)
+  } catch (error) {
+    console.error("Error deleting championship:", error)
+    throw new Error("Failed to delete championship. Please try again.")
+  }
+}
+
+export async function addChampResult(champId: string, newResult: TournamentResult): Promise<void> {
+  const champRef = doc(db, "champs", champId)
+
+  try {
+    const champDoc = await getDoc(champRef)
+    if (!champDoc.exists()) {
+      throw new Error("Championship not found")
+    }
+
+    const champ = champDoc.data() as Tournament
+
+    const updatedResults = [...champ.results, newResult]
+
+    updatedResults.sort((a, b) => a.rank - b.rank)
+
+    const recalculatedResults = updatedResults.map((result, index) => ({
+      ...result,
+      rank: index + 1,
+    }))
+
+    await updateDoc(champRef, { results: recalculatedResults })
+  } catch (error) {
+    console.error("Error adding result to championship:", error)
+    throw new Error("Failed to add result to championship. Please try again.")
   }
 }
 

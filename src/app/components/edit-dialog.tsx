@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/dialog"
 import SelectItemDialog from './select-item-dialog'
 import SelectTournamentItemDialog from './select-tournament-item-dialog'
+import SelectChampsItemDialog from './select-champs-item-dialog'
 import PlayersListDialog from './players-list-dialog'
-import { getMeetingsData, getTournaments, updateLeaderboard } from '../firebase/firebase'
+import { getChamps, getMeetingsData, getTournaments, updateLeaderboard } from '../firebase/firebase'
 import { Meeting, Tournament } from '../types'
 import { toast } from "@/hooks/use-toast"
 
@@ -22,13 +23,14 @@ type EditDialogProps = {
 }
 
 export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
-  const [selectedOption, setSelectedOption] = useState<'weekly-meetings' | 'tournaments' | 'players' | null>(null)
+  const [selectedOption, setSelectedOption] = useState<'weekly-meetings' | 'tournaments' | 'players' | 'champs' | null>(null)
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [champs, setChamps] = useState<Tournament[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchItems = async (option: 'weekly-meetings' | 'tournaments') => {
+  const fetchItems = async (option: 'weekly-meetings' | 'tournaments' | 'champs') => {
     setIsLoading(true)
     setError(null)
     try {
@@ -39,6 +41,10 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
         const fetchedTournaments = await getTournaments()
         setTournaments(fetchedTournaments)
       }
+      else if (option === 'champs') {
+        const fetchedChamps = await getChamps()
+        setChamps(fetchedChamps)
+      }
     } catch (err) {
       console.error(`Error fetching ${option}:`, err)
       setError(`Failed to load ${option}. Please try again.`)
@@ -47,15 +53,15 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
     }
   }
 
-  const handleEdit = async (option: 'weekly-meetings' | 'tournaments' | 'players') => {
+  const handleEdit = async (option: 'weekly-meetings' | 'tournaments' | 'players' | 'champs') => {
     setSelectedOption(option)
-    if (option === 'weekly-meetings' || option === 'tournaments') {
+    if (option === 'weekly-meetings' || option === 'tournaments' || option === 'champs') {
       await fetchItems(option)
     }
   }
 
   const handleRefresh = async () => {
-    if (selectedOption === 'weekly-meetings' || selectedOption === 'tournaments') {
+    if (selectedOption === 'weekly-meetings' || selectedOption === 'tournaments' || selectedOption === 'champs') {
       await fetchItems(selectedOption)
     }
   }
@@ -99,6 +105,9 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
             <Button onClick={() => handleEdit('tournaments')}>
               Edit Tournaments
             </Button>
+            <Button onClick={() => handleEdit('champs')}>
+              Edit Champs
+            </Button>
             <Button onClick={() => handleEdit('players')}>
               Players List
             </Button>
@@ -135,6 +144,14 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
           isOpen={selectedOption === 'tournaments'}
           onOpenChange={(open) => !open && setSelectedOption(null)}
           tournaments={tournaments}
+          onRefresh={handleRefresh}
+        />
+      )}
+      {selectedOption === 'champs' && (
+        <SelectChampsItemDialog
+          isOpen={selectedOption === 'champs'}
+          onOpenChange={(open) => !open && setSelectedOption(null)}
+          tournaments={champs}
           onRefresh={handleRefresh}
         />
       )}
