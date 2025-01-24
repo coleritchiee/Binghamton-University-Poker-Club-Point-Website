@@ -1,13 +1,13 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Leaderboard from './leaderboard'
-import WeeklyMeetings from './weekly-meetings'
-import Tournaments from './tournaments'
-import Champions from './champions'
-import { getLeaderboardData, getMeetingsData, getTournaments, getChamps } from '../firebase/firebase'
-import { LeaderboardEntry, Meeting, Tournament } from '../types'
+import Leaderboard from "./leaderboard"
+import WeeklyMeetings from "./weekly-meetings"
+import Tournaments from "./tournaments"
+import Champions from "./champions"
+import { getLeaderboardData, getMeetingsData, getTournaments, getChamps } from "../firebase/firebase"
+import type { LeaderboardEntry, Meeting, Tournament } from "../types"
 
 export default function PokerClubTabs() {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
@@ -24,25 +24,43 @@ export default function PokerClubTabs() {
           getLeaderboardData(),
           getMeetingsData(),
           getTournaments(),
-          getChamps()
+          getChamps(),
         ])
 
         setLeaderboardData(leaderboard)
 
-        const sortedMeetings = meetingsData.map(meeting => ({
-          ...meeting,
-          results: [...meeting.results].sort((a, b) => b.points - a.points)
-        })).sort((a, b) => {
-          const dateA = new Date(new Date().getFullYear(), parseInt(a.name.split('/')[0]) - 1, parseInt(a.name.split('/')[1]))
-          const dateB = new Date(new Date().getFullYear(), parseInt(b.name.split('/')[0]) - 1, parseInt(b.name.split('/')[1]))
-          return dateB.getTime() - dateA.getTime()
-        })
+        const sortedMeetings = meetingsData
+          .map((meeting) => ({
+            ...meeting,
+            results: [...meeting.results].sort((a, b) => b.points - a.points),
+          }))
+          .sort((a, b) => {
+            const dateA = new Date(
+              new Date().getFullYear(),
+              Number.parseInt(a.name.split("/")[0]) - 1,
+              Number.parseInt(a.name.split("/")[1]),
+            )
+            const dateB = new Date(
+              new Date().getFullYear(),
+              Number.parseInt(b.name.split("/")[0]) - 1,
+              Number.parseInt(b.name.split("/")[1]),
+            )
+            return dateB.getTime() - dateA.getTime()
+          })
         setMeetings(sortedMeetings)
 
-        const nonActiveTournaments = tournamentsData.filter(tournament => !tournament.isActive)
+        const nonActiveTournaments = tournamentsData.filter((tournament) => !tournament.isActive)
         const sortedTournaments = [...nonActiveTournaments].sort((a, b) => {
-          const dateA = new Date(new Date().getFullYear(), parseInt(a.name.split('/')[0]) - 1, parseInt(a.name.split('/')[1]))
-          const dateB = new Date(new Date().getFullYear(), parseInt(b.name.split('/')[0]) - 1, parseInt(b.name.split('/')[1]))
+          const dateA = new Date(
+            new Date().getFullYear(),
+            Number.parseInt(a.name.split("/")[0]) - 1,
+            Number.parseInt(a.name.split("/")[1]),
+          )
+          const dateB = new Date(
+            new Date().getFullYear(),
+            Number.parseInt(b.name.split("/")[0]) - 1,
+            Number.parseInt(b.name.split("/")[1]),
+          )
           return dateB.getTime() - dateA.getTime()
         })
         setTournaments(sortedTournaments)
@@ -50,19 +68,19 @@ export default function PokerClubTabs() {
         const sortedChamps = champsData.sort((a, b) => {
           const [seasonA, yearA] = a.name.split(" ")
           const [seasonB, yearB] = b.name.split(" ")
-      
+
           if (yearA !== yearB) {
             return Number.parseInt(yearB) - Number.parseInt(yearA)
           }
-      
+
           if (seasonA === seasonB) {
             return 0
           }
-      
+
           if (seasonA === "Spring") {
             return 1
           }
-      
+
           return -1
         })
 
@@ -89,28 +107,28 @@ export default function PokerClubTabs() {
 
   return (
     <Tabs defaultValue="leaderboard" className="w-full">
-      <TabsList className="flex w-full flex-wrap justify-between bg-muted p-1 h-14">
-        <TabsTrigger 
-          value="leaderboard" 
-          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+      <TabsList className="grid grid-cols-2 sm:flex sm:flex-row w-full bg-muted py-0.5 px-0.5 h-auto">
+        <TabsTrigger
+          value="leaderboard"
+          className="flex items-center justify-center h-12 px-2 text-sm sm:text-xs md:text-sm lg:text-base whitespace-nowrap overflow-hidden text-ellipsis sm:flex-1"
         >
           Leaderboard
         </TabsTrigger>
-        <TabsTrigger 
-          value="weekly-meetings" 
-          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+        <TabsTrigger
+          value="weekly-meetings"
+          className="flex items-center justify-center h-12 px-2 text-sm sm:text-xs md:text-sm lg:text-base whitespace-nowrap overflow-hidden text-ellipsis sm:flex-1"
         >
           Weekly Meetings
         </TabsTrigger>
-        <TabsTrigger 
-          value="tournaments" 
-          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+        <TabsTrigger
+          value="tournaments"
+          className="flex items-center justify-center h-12 px-2 text-sm sm:text-xs md:text-sm lg:text-base whitespace-nowrap overflow-hidden text-ellipsis sm:flex-1"
         >
           Tournaments
         </TabsTrigger>
-        <TabsTrigger 
-          value="champions" 
-          className="flex-1 flex items-center justify-center h-full px-2 text-xs sm:text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+        <TabsTrigger
+          value="champions"
+          className="flex items-center justify-center h-12 px-2 text-sm sm:text-xs md:text-sm lg:text-base whitespace-nowrap overflow-hidden text-ellipsis sm:flex-1"
         >
           Champions
         </TabsTrigger>
@@ -130,3 +148,4 @@ export default function PokerClubTabs() {
     </Tabs>
   )
 }
+
