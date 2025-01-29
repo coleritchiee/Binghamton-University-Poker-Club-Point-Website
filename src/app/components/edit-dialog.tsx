@@ -1,47 +1,44 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import SelectItemDialog from './select-item-dialog'
-import SelectTournamentItemDialog from './select-tournament-item-dialog'
-import SelectChampsItemDialog from './select-champs-item-dialog'
-import PlayersListDialog from './players-list-dialog'
-import { getChamps, getMeetingsData, getTournaments, updateLeaderboard } from '../firebase/firebase'
-import { Meeting, Tournament } from '../types'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import SelectItemDialog from "./select-item-dialog"
+import SelectTournamentItemDialog from "./select-tournament-item-dialog"
+import SelectChampsItemDialog from "./select-champs-item-dialog"
+import PlayersListDialog from "./players-list-dialog"
+import { getChamps, getMeetingsData, getTournaments, updateLeaderboard, endSemester } from "../firebase/firebase"
+import type { Meeting, Tournament } from "../types"
 import { toast } from "@/hooks/use-toast"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,} from "@/components/ui/alert-dialog"
 
 type EditDialogProps = {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
-  const [selectedOption, setSelectedOption] = useState<'weekly-meetings' | 'tournaments' | 'players' | 'champs' | null>(null)
+  const [selectedOption, setSelectedOption] = useState<"weekly-meetings" | "tournaments" | "players" | "champs" | null>(
+    null,
+  )
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [champs, setChamps] = useState<Tournament[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
 
-  const fetchItems = async (option: 'weekly-meetings' | 'tournaments' | 'champs') => {
+  const fetchItems = async (option: "weekly-meetings" | "tournaments" | "champs") => {
     setIsLoading(true)
     setError(null)
     try {
-      if (option === 'weekly-meetings') {
+      if (option === "weekly-meetings") {
         const fetchedMeetings = await getMeetingsData()
         setMeetings(fetchedMeetings)
-      } else if (option === 'tournaments') {
+      } else if (option === "tournaments") {
         const fetchedTournaments = await getTournaments()
         setTournaments(fetchedTournaments)
-      }
-      else if (option === 'champs') {
+      } else if (option === "champs") {
         const fetchedChamps = await getChamps()
         setChamps(fetchedChamps)
       }
@@ -53,15 +50,15 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
     }
   }
 
-  const handleEdit = async (option: 'weekly-meetings' | 'tournaments' | 'players' | 'champs') => {
+  const handleEdit = async (option: "weekly-meetings" | "tournaments" | "players" | "champs") => {
     setSelectedOption(option)
-    if (option === 'weekly-meetings' || option === 'tournaments' || option === 'champs') {
+    if (option === "weekly-meetings" || option === "tournaments" || option === "champs") {
       await fetchItems(option)
     }
   }
 
   const handleRefresh = async () => {
-    if (selectedOption === 'weekly-meetings' || selectedOption === 'tournaments' || selectedOption === 'champs') {
+    if (selectedOption === "weekly-meetings" || selectedOption === "tournaments" || selectedOption === "champs") {
       await fetchItems(selectedOption)
     }
   }
@@ -88,73 +85,107 @@ export default function EditDialog({ isOpen, onOpenChange }: EditDialogProps) {
     }
   }
 
+  const handleEndSemester = () => {
+    setIsConfirmDialogOpen(true)
+  }
+
+  const handleConfirmedEndSemester = async () => {
+    setIsConfirmDialogOpen(false)
+    try {
+      await endSemester()
+      toast({
+        title: "Semester Ended",
+        description: "The semester has been successfully ended.",
+      })
+    } catch (err) {
+      console.error("Error ending semester:", err)
+      setError("Failed to end semester. Please try again.")
+      toast({
+        title: "Error",
+        description: "Failed to end semester. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px] bg-background/80 backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle>Edit Options</DialogTitle>
-            <DialogDescription>
-              Choose what you want to edit.
-            </DialogDescription>
+            <DialogDescription>Choose what you want to edit.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <Button onClick={() => handleEdit('weekly-meetings')}>
-              Edit Weekly Meetings
-            </Button>
-            <Button onClick={() => handleEdit('tournaments')}>
-              Edit Tournaments
-            </Button>
-            <Button onClick={() => handleEdit('champs')}>
-              Edit Champs
-            </Button>
-            <Button onClick={() => handleEdit('players')}>
-              Players List
-            </Button>
+            <Button onClick={() => handleEdit("weekly-meetings")}>Edit Weekly Meetings</Button>
+            <Button onClick={() => handleEdit("tournaments")}>Edit Tournaments</Button>
+            <Button onClick={() => handleEdit("champs")}>Edit Champs</Button>
+            <Button onClick={() => handleEdit("players")}>Players List</Button>
             <Button onClick={handleUpdateLeaderboard} disabled={isLoading}>
-              {isLoading ? 'Updating...' : 'Update Leaderboard'}
+              {isLoading ? "Updating..." : "Update Leaderboard"}
+            </Button>
+            <Button onClick={handleEndSemester} variant="destructive">
+              End Semester
             </Button>
           </div>
           {error && <div className="text-sm text-destructive">{error}</div>}
         </DialogContent>
       </Dialog>
 
-      {selectedOption === 'players' && (
+      {selectedOption === "players" && (
         <PlayersListDialog
-          isOpen={selectedOption === 'players'}
+          isOpen={selectedOption === "players"}
           onOpenChange={(open) => !open && setSelectedOption(null)}
         />
       )}
 
-      {selectedOption === 'weekly-meetings' && (
+      {selectedOption === "weekly-meetings" && (
         <SelectItemDialog
-          isOpen={selectedOption === 'weekly-meetings'}
+          isOpen={selectedOption === "weekly-meetings"}
           onOpenChange={(open) => !open && setSelectedOption(null)}
           title="Select a Meeting"
           items={meetings}
-          onSelectItem={(item)=>{console.log(item)}}
-          onCreateNew={()=>{}}
+          onSelectItem={(item) => {
+            console.log(item)
+          }}
+          onCreateNew={() => {}}
           itemType="weekly-meetings"
           onRefresh={handleRefresh}
         />
       )}
 
-      {selectedOption === 'tournaments' && (
+      {selectedOption === "tournaments" && (
         <SelectTournamentItemDialog
-          isOpen={selectedOption === 'tournaments'}
+          isOpen={selectedOption === "tournaments"}
           onOpenChange={(open) => !open && setSelectedOption(null)}
           tournaments={tournaments}
           onRefresh={handleRefresh}
         />
       )}
-      {selectedOption === 'champs' && (
+      {selectedOption === "champs" && (
         <SelectChampsItemDialog
-          isOpen={selectedOption === 'champs'}
+          isOpen={selectedOption === "champs"}
           onOpenChange={(open) => !open && setSelectedOption(null)}
           tournaments={champs}
           onRefresh={handleRefresh}
         />
       )}
+      <AlertDialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete all tournaments and weekly meetings, and reset
+              all player points to 0.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmedEndSemester}>End Semester</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
+

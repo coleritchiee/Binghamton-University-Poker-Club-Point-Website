@@ -832,4 +832,34 @@ export async function addChampResult(champId: string, newResult: TournamentResul
   }
 }
 
+export async function endSemester(): Promise<void>{
+  const batch = writeBatch(db)
+
+  try {
+    const tournamentsSnapshot = await getDocs(collection(db, "tournaments"))
+    tournamentsSnapshot.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    const meetingsSnapshot = await getDocs(collection(db, "meetings"))
+    meetingsSnapshot.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    const playersSnapshot = await getDocs(collection(db, "players"))
+    playersSnapshot.forEach((doc) => {
+      batch.update(doc.ref, { points: 0 })
+    })
+
+    await batch.commit()
+
+    await updateLeaderboard()
+
+    console.log("Semester ended successfully")
+  } catch (error) {
+    console.error("Error ending semester:", error)
+    throw new Error("Failed to end semester. Please try again.")
+  }
+}
+
 export { db };
